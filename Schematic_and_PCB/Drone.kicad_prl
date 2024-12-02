@@ -1,10 +1,23 @@
 {
   "board": {
-    "active_layer": 31,
+    "active_layer": 0,
     "active_layer_preset": "All Layers",
     "auto_track_width": true,
     "hidden_netclasses": [],
-    "hidden_nets": [],
+    "hidden_nets": [
+      "Net-(D1-K)",
+      "GND",
+      "Net-(D2-K)",
+      "Net-(D2-A)",
+      "Net-(D3-A)",
+      "Net-(D4-A)",
+      "Net-(D5-A)",
+      "Net-(Q1-G)",
+      "Net-(Q2-G)",
+      "Net-(Q3-G)",
+      "Net-(Q4-G)",
+      "Net-(ESP32-Pin_1)"
+    ],
     "high_contrast_mode": 0,
     "net_color_mode": 1,
     "opacity": {
