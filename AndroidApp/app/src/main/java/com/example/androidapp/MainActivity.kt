@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothSocket
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.Handler
+import android.os.Looper
 import android.widget.SeekBar
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresPermission
@@ -54,11 +55,10 @@ class MainActivity : AppCompatActivity() {
         val seekBar4 = findViewById<SeekBar>(R.id.seekBar4)
         val seekBar5 = findViewById<SeekBar>(R.id.seekBar5)
 
-        seekBar2.setOnSeekBarChangeListener(createSeekBarChangeListener { progress -> xValue = progress })
-        seekBar3.setOnSeekBarChangeListener(createSeekBarChangeListener { progress -> yValue = progress })
-        seekBar4.setOnSeekBarChangeListener(createSeekBarChangeListener { progress -> rotateValue = progress })
-        seekBar5.setOnSeekBarChangeListener(createSeekBarChangeListener { progress -> powerValue = progress })
-
+        setupAutoDecrease(seekBar2,"xValue")
+        setupAutoDecrease(seekBar3,"yValue")
+        setupAutoDecrease(seekBar4,"rotateValue")
+        setupAutoDecrease(seekBar5,"powerValue")
         if (hasBluetoothPermissions()) {
             initializeBluetooth()
         } else {
@@ -73,22 +73,70 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun createSeekBarChangeListener(onProgressChanged: (progress: Int) -> Unit) =
-        object : SeekBar.OnSeekBarChangeListener {
+    fun setupAutoDecrease(seekBar: SeekBar, name : String) {
+        val handler = Handler(Looper.getMainLooper())
+        var isUserTouching = false
+
+        // Listener to track user interaction
+        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                onProgressChanged(progress)
+                if(name == "xValue"){
+                    xValue = progress
+                }
+                if(name == "yValue"){
+                    yValue = progress
+                }
+                if(name == "rotateValue"){
+                    rotateValue = progress
+                }
+                if(name == "powerValue"){
+                    powerValue = progress
+                }
             }
 
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+                isUserTouching = true
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                isUserTouching = false
+            }
+        })
+
+        // Periodic task to decrease the value if not touched
+        val runnable = object : Runnable {
+            override fun run() {
+                if (!isUserTouching) {
+                    if(seekBar.progress > 132){
+                        seekBar.progress = (seekBar.progress - 5).coerceAtLeast(seekBar.min)
+                    }
+                    else{
+                        if(seekBar.progress > 127){
+                            seekBar.progress = (seekBar.progress - 1).coerceAtLeast(seekBar.min)
+                        }
+                    }
+                    if (seekBar.progress < 122){
+                        seekBar.progress = (seekBar.progress + 5).coerceAtLeast(seekBar.min)
+                    }
+                    else{
+                        if (seekBar.progress < 127){
+                            seekBar.progress = (seekBar.progress + 1).coerceAtLeast(seekBar.min)
+                        }
+                    }
+                }
+                handler.postDelayed(this, 1000) // Adjust delay as needed (e.g., 1000ms = 1s)
+            }
         }
 
+        // Start the periodic check
+        handler.post(runnable)
+    }
 
     private fun initializeBluetooth() {
         try {
             bluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
             val device: BluetoothDevice? =
-                bluetoothAdapter?.bondedDevices?.find { it.name == "ESP32" } // Replace with your ESP32's name
+                bluetoothAdapter?.bondedDevices?.find { it.name == "Quadrocopter" } // Replace with your ESP32's name
             val uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB") // Standard UUID for SPP
             bluetoothSocket = device?.createRfcommSocketToServiceRecord(uuid)
             bluetoothSocket?.connect()
@@ -110,8 +158,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun sendData() {
         try {
-            val data = "X:$xValue,Y:$yValue,Rotate:$rotateValue,Power:$powerValue\n"
-            outputStream?.write(data.toByteArray())
+            val data = byteArrayOf(xValue.toUByte().toByte(), yValue.toUByte().toByte(), rotateValue.toUByte().toByte(), powerValue.toUByte().toByte());
+            outputStream?.write(data)
         } catch (e: Exception) {
             e.printStackTrace()
         }

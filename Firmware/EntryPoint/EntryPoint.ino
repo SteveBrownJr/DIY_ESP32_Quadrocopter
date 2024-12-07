@@ -1,35 +1,53 @@
-#include <BluetoothSerial.h>
-
-#define Device_Bluetooth_name "Barna A34 eszköze"
-#define sizeofinputbuffer 1024
+#include "BluetoothSerial.h"
 
 BluetoothSerial SerialBT;
-uint8_t inputbuffer[sizeofinputbuffer];
+
+static float xTarget=0.0f;
+static float yTarget=0.0f;
+static float targetRotation=0.0f;
+static float targetPower=0.0f;
+
+static void DataFetcher(const uint8_t *buffer, size_t size){
+  if(size>0){
+    xTarget = static_cast<float>(buffer[0]-127);
+    if(size>1){
+      yTarget = static_cast<float>(buffer[1]-127);
+        if(size>2){
+          targetRotation = static_cast<float>(buffer[2]-127);
+          if(size>3){
+            targetPower = static_cast<float>(buffer[3]-127);
+        }
+      }
+    }
+  }
+}
+
+void BeginQuadroControl(const char* name){
+  SerialBT.begin(name);
+  SerialBT.onData(DataFetcher);
+}
+
+
+
+float GetXTarget(){
+  return xTarget;
+}
+float GetYTarget(){
+  return yTarget;
+}
+float GetTargetPower(){
+  return targetPower;
+}
+float GetTargetRotation(){
+  return targetRotation;
+}
 
 void setup() {
   Serial.begin(115200);
-  SerialBT.begin("ESP32");
-  //This is a simple callback function if we recieve some data we copy to our buffer which is in the data section;
-  SerialBT.onData([](const uint8_t *buffer, size_t size){
-    memset(inputbuffer,sizeofinputbuffer, 0);
-    inputbuffer[sizeofinputbuffer-1]='\0';
-    if(size < sizeofinputbuffer-1)
-      memcpy(inputbuffer,buffer,size);
-    else
-      memcpy(inputbuffer,buffer,sizeofinputbuffer);
-    for(int i = 0; i<sizeofinputbuffer-2;i++){
-      if(inputbuffer[i]=='\n'){
-        inputbuffer[i] ='\r';
-        inputbuffer[i+1]='\n';
-        inputbuffer[i+2]='\0';
-        break;
-      }
-    }
-    SerialBT.flush();
-  });
+  BeginQuadroControl("Quadrocopter");
 }
 
 void loop() {
-  Serial.write((char*)(& inputbuffer[0]),strlen((char*)(& inputbuffer[0])));
+  Serial.printf("%f | %f | %f | %f \n\r", GetXTarget(), GetYTarget(), GetTargetPower(), GetTargetRotation());
   delay(100);
 }
