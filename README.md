@@ -1,3 +1,6 @@
+
+## The body of the drone
+I have been able to 3D print the body of the drone so I designed my own STL in Solid Works. You can find the STL in the 3DPrintableParts folder. I used a Creality Ender 3 V2 3D printer for the purpose and Cura slicer with dynamic resolution. Material was normal pla. You can see the quick overview below:
 ```stl
 solid Mesh
   facet normal 0.000000 0.000000 -1.000000
