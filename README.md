@@ -1,4 +1,6 @@
-
+## Schematic
+The ESP32 is not enough to reliably drive 4 motors so I had to add 4 mosfets and 2 mosfet drivers. I supplied the 3.3V input voltage for the gyroscope and the microcontroller from a buck converter which is fixed internally.
+![[Rendered image of the PCB](https://github.com/SteveBrownJr/DIY_ESP32_Quadrocopter/blob/main/Schematic_and_PCB/PCB_3D_render%20by%20KiCAD.jpg)]
 ## The body of the drone
 I have been able to 3D print the body of the drone so I designed my own STL in Solid Works. You can find the STL in the 3DPrintableParts folder. I used a Creality Ender 3 V2 3D printer for the purpose and Cura slicer with dynamic resolution. Material was normal pla. You can see the quick overview below:
 ```stl
